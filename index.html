@@ -499,7 +499,61 @@
                     <div class="stat-card"><div class="stat-value" style="color: #F39C12;">${mediumRisk}</div><div class="stat-label">Medium Risk</div></div>
                     <div class="stat-card"><div class="stat-value" style="color: #2ECC71;">${lowRisk}</div><div class="stat-label">Low Risk</div></div>
                 `;
-
+const totalSteps = this.selectedTemplate.steps.length;
+                const completedSteps = this.selectedTemplate.steps.filter(s => {
+                    const count = this.reviews[s.stepId].length;
+                    return count >= 3;
+                }).length;
+                
+                const isCompleted = completedSteps === totalSteps;
+                
+                // Find student in list
+                const studentIndex = this.students.findIndex(s => s.id === this.currentStudent.id);
+                if (studentIndex === -1) return; // Student not found
+                
+                // Initialize projects array if needed
+                if (!this.students[studentIndex].projects) {
+                    this.students[studentIndex].projects = [];
+                }
+                
+                // Find or create project entry
+                let projectIndex = this.students[studentIndex].projects.findIndex(p => 
+                    p.projectId === this.project.projectId
+                );
+                
+                if (projectIndex === -1) {
+                    // Create new project entry
+                    this.students[studentIndex].projects.push({
+                        projectId: this.project.projectId,
+                        company: this.project.company,
+                        templateName: this.selectedTemplate.name,
+                        completedSteps: completedSteps,
+                        totalSteps: totalSteps,
+                        completed: isCompleted,
+                        createdAt: new Date().toLocaleString(),
+                        stepDetails: this.selectedTemplate.steps.map(step => ({
+                            stepId: step.stepId,
+                            stepName: step.stepName,
+                            icon: step.icon,
+                            reviews: this.reviews[step.stepId].length
+                        }))
+                    });
+                } else {
+                    // Update existing project entry
+                    this.students[studentIndex].projects[projectIndex].completedSteps = completedSteps;
+                    this.students[studentIndex].projects[projectIndex].completed = isCompleted;
+                    this.students[studentIndex].projects[projectIndex].stepDetails = this.selectedTemplate.steps.map(step => ({
+                        stepId: step.stepId,
+                        stepName: step.stepName,
+                        icon: step.icon,
+                        reviews: this.reviews[step.stepId].length
+                    }));
+                }
+                
+                // Save to browser storage
+                localStorage.setItem('students', JSON.stringify(this.students));
+                console.log('✅ Project progress saved!');
+            },
                 const flow = document.getElementById('process-flow');
                 flow.innerHTML = this.selectedTemplate.steps.map((step, idx) => {
                     const count = this.reviews[step.stepId].length;
