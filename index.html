@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospitality Process Mapper - Student Edition</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #2c3e50; min-height: 100vh; }
+        .navbar { background: white; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .navbar-brand { font-weight: bold; font-size: 18px; color: #003E73; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #003E73 0%, #1a5a9f 100%); color: white; padding: 40px 20px; border-radius: 12px; margin-bottom: 30px; text-align: center; }
+        .header h1 { font-size: 36px; margin-bottom: 10px; }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1); margin-bottom: 20px; transition: all 0.3s ease; }
+        .card:hover { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); transform: translateY(-4px); }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; font-weight: 600; }
+        .btn-primary { background: linear-gradient(135deg, #003E73 0%, #1a5a9f 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 62, 115, 0.3); }
+        .btn-secondary { background: #f0f0f0; color: #333; border: 1px solid #ddd; }
+        .btn-danger { background: #E74C3C; color: white; }
+        .btn-small { padding: 8px 16px; font-size: 13px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #003E73; box-shadow: 0 0 0 3px rgba(0, 62, 115, 0.1); }
+        .form-group textarea { min-height: 100px; }
+        .progress-bar { width: 100%; height: 10px; background: #e0e0e0; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #003E73, #1a5a9f); transition: width 0.3s; }
+        .step-indicator { text-align: center; font-size: 14px; color: #999; margin-bottom: 20px; font-weight: 600; }
+        .badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-right: 8px; }
+        .badge-danger { background: #ffe0e0; color: #E74C3C; }
+        .badge-warning { background: #fff3e0; color: #F39C12; }
+        .badge-success { background: #e8f5e9; color: #2ECC71; }
+        .review-item { background: #f9f9f9; border-left: 4px solid #003E73; padding: 16px; margin-bottom: 12px; border-radius: 6px; }
+        .process-node { background: white; border: 3px solid #003E73; border-radius: 12px; padding: 16px; text-align: center; min-width: 140px; transition: all 0.3s; }
+        .process-node:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0, 62, 115, 0.2); }
+        .process-node.decision { border-color: #F39C12; background: #fffaf0; }
+        .process-node.process { border-color: #2ECC71; background: #f0fdf4; }
+        .process-node.end { border-color: #E74C3C; background: #fef2f2; }
+        .process-node-icon { font-size: 32px; margin-bottom: 8px; }
+        .process-node-name { font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+        .process-node-count { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; color: white; background: #003E73; }
+        .risk-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: white; }
+        .risk-low { background: #2ECC71; }
+        .risk-medium { background: #F39C12; }
+        .risk-high { background: #E74C3C; }
+        .process-flow { display: flex; align-items: center; gap: 12px; overflow-x: auto; padding: 20px 0; margin-bottom: 40px; }
+        .process-flow-arrow { color: #003E73; font-size: 24px; flex-shrink: 0; }
+        .button-group { display: flex; gap: 12px; margin-top: 30px; }
+        .button-group button { flex: 1; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .stat-card { background: white; padding: 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 32px; font-weight: bold; color: #003E73; }
+        .stat-label { font-size: 12px; color: #999; margin-top: 8px; }
+        .summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .char-count { font-size: 12px; color: #999; margin-top: 4px; }
+        .student-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .student-card { background: white; border: 2px solid #e0e0e0; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.3s; }
+        .student-card:hover { border-color: #003E73; box-shadow: 0 4px 12px rgba(0, 62, 115, 0.2); }
+        .student-card-name { font-weight: 700; color: #003E73; margin-bottom: 8px; font-size: 16px; }
+        .student-card-company { font-size: 13px; color: #666; margin-bottom: 12px; }
+        .student-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .student-actions button { flex: 1; padding: 8px; font-size: 12px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal.active { display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 600px; width: 90%; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .modal-header { font-size: 20px; font-weight: 700; color: #003E73; margin-bottom: 20px; }
+        .modal-close { float: right; font-size: 24px; font-weight: bold; color: #999; cursor: pointer; }
+        .export-option { border: 2px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; transition: all 0.3s; }
+        .export-option:hover { border-color: #003E73; background: #f9f9f9; }
+        .export-option-title { font-weight: 700; margin-bottom: 8px; color: #003E73; }
+        .export-option-desc { font-size: 13px; color: #666; margin-bottom: 12px; }
+        @media (max-width: 768px) { .header h1 { font-size: 28px; } .grid { grid-template-columns: 1fr; } .button-group { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-brand">🏨 Hospitality Process Mapper - Student Edition</div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-page" class="page active">
+        <div class="container">
+            <div class="header">
+                <h1>🎓 Student Dashboard</h1>
+                <p>Manage student process mapping projects</p>
+            </div>
+            <div style="margin-bottom: 24px;">
+                <button class="btn btn-primary" onclick="app.openAddStudentModal()">➕ Add New Student</button>
+            </div>
+            <div id="students-container"></div>
+        </div>
+    </div>
+
+    <!-- Industry Selection -->
+    <div id="industry-page" class="page">
+        <div class="container">
+            <div class="header">
+                <h1>Select Industry</h1>
+                <p>Choose which industry to analyze</p>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-secondary btn-small" onclick="app.goToPage('dashboard')">← Back to Dashboard</button>
+            </div>
+            <div class="grid" id="industry-grid"></div>
+        </div>
+    </div>
+
+    <!-- Project Setup -->
+    <div id="setup-page" class="page">
+        <div class="container">
+            <button class="btn btn-secondary btn-small" onclick="app.goToPage('industry')" style="margin-bottom: 20px;">← Back</button>
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #003E73; margin-bottom: 8px;">Project Setup</h1>
+                <p style="color: #666; margin-bottom: 30px; font-size: 14px;">
+                    Student: <strong id="setup-student-name"></strong>
+                </p>
+                <div class="form-group">
+                    <label>Company Being Analyzed *</label>
+                    <input type="text" id="company-name" placeholder="e.g. Mario's Trattoria" required>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="app.goToPage('industry')">← Previous</button>
+                    <button class="btn btn-primary" onclick="app.startProject()">Start Mapping →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Input -->
+    <div id="review-page" class="page">
+        <div class="container">
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div class="step-indicator" id="step-info"></div>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <span style="font-size: 40px; margin-right: 12px;" id="step-icon"></span>
+                            <h2 style="color: #003E73; display: inline-block;" id="step-name"></h2>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 12px; color: #999;">Student</div>
+                            <div style="font-size: 14px; font-weight: 600;" id="review-student-name"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e0e0e0;">
+                        <p style="font-size: 13px; color: #666;">Add 3-5 customer reviews for this step.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Review <span id="review-count"></span>/5</label>
+                        <textarea id="review-input" placeholder="Type or paste a review here..."></textarea>
+                        <div class="char-count"><span id="char-count">0</span> characters</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.addReview()" style="width: 100%; margin-bottom: 24px;">+ Add Review</button>
+                    <div id="reviews-list"></div>
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="app.previousStep()" id="prev-btn">← Previous Step</button>
+                        <button class="btn btn-primary" onclick="app.nextStep()" id="next-btn">Next Step →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overview -->
+    <div id="overview-page" class="page">
+        <div class="container">
+            <div class="header">
+                <h1>📊 Process Map Overview</h1>
+                <p id="overview-subtitle"></p>
+            </div>
+            <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn btn-secondary" onclick="app.goToPage('dashboard')">🎓 Back to Dashboard</button>
+                <button class="btn btn-primary" onclick="app.goToPage('analytics')">📈 View Analytics</button>
+                <button class="btn btn-primary" onclick="app.goToPage('export')">📥 Export Report</button>
+            </div>
+            <div class="summary-stats" id="summary-stats"></div>
+            <h2 style="margin-bottom: 20px; font-size: 16px; color: #333;">Your Process Flow</h2>
+            <div class="process-flow" id="process-flow"></div>
+            <h2 style="margin-bottom: 20px; font-size: 16px; color: #333;">Step Details with Risk Levels</h2>
+            <div id="step-details"></div>
+        </div>
+    </div>
+
+    <!-- Analytics -->
+    <div id="analytics-page" class="page">
+        <div class="container">
+            <button class="btn btn-secondary btn-small" onclick="app.goToPage('overview')" style="margin-bottom: 20px;">← Back</button>
+            <div class="header">
+                <h1>📈 Risk Analysis</h1>
+                <p>Student Risk Level Assessment</p>
+            </div>
+            <div class="summary-stats" id="analytics-stats"></div>
+            <h2 style="margin-bottom: 20px; font-size: 16px; color: #333;">Overall Risk Assessment</h2>
+            <div id="overall-risk"></div>
+            <h2 style="margin-bottom: 40px; font-size: 16px; color: #333; margin-top: 40px;">🔴 Steps by Risk</h2>
+            <div id="analytics-list"></div>
+        </div>
+    </div>
+
+    <!-- Export -->
+    <div id="export-page" class="page">
+        <div class="container">
+            <button class="btn btn-secondary btn-small" onclick="app.goToPage('overview')" style="margin-bottom: 20px;">← Back</button>
+            <div class="header">
+                <h1>📥 Export Report</h1>
+                <p>Download student analysis (PDF or Word format)</p>
+            </div>
+            <div style="max-width: 600px; margin: 0 auto;">
+                <div class="export-option" onclick="app.exportPDF()">
+                    <div class="export-option-title">📋 PDF Document (.pdf)</div>
+                    <div class="export-option-desc">Professional PDF report ready for printing and sharing</div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="event.stopPropagation(); app.exportPDF();">Download PDF</button>
+                </div>
+                <div class="export-option" onclick="app.exportWord()">
+                    <div class="export-option-title">📄 Word Document (.docx)</div>
+                    <div class="export-option-desc">Editable Word document for further customization</div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="event.stopPropagation(); app.exportWord();">Download Word</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="add-student-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="app.closeAddStudentModal()">&times;</span>
+            <div class="modal-header">Add New Student</div>
+            <div class="form-group">
+                <label>Student Name *</label>
+                <input type="text" id="modal-student-name" placeholder="Enter student full name" required>
+            </div>
+            <div class="form-group">
+                <label>Email (Optional)</label>
+                <input type="email" id="modal-student-email" placeholder="student@example.com">
+            </div>
+            <div class="form-group">
+                <label>Class/Group</label>
+                <input type="text" id="modal-student-class" placeholder="e.g. Hospitality 101">
+            </div>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="app.closeAddStudentModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="app.addStudent()">Add Student</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+        const templates = {
+            restaurant: { id: 'restaurant', name: 'Fine Dining Restaurant', steps: [
+                { stepId: 1, stepName: 'Customer Arrives', icon: '👥', type: 'start' },
+                { stepId: 2, stepName: 'Reservation Check', icon: '📋', type: 'decision' },
+                { stepId: 3, stepName: 'Seating & Menu', icon: '🪑', type: 'process' },
+                { stepId: 4, stepName: 'Order Taking', icon: '🖊️', type: 'process' },
+                { stepId: 5, stepName: 'Kitchen Prep', icon: '👨‍🍳', type: 'process' },
+                { stepId: 6, stepName: 'Food Delivery', icon: '🍽️', type: 'process' },
+                { stepId: 7, stepName: 'Dining', icon: '😋', type: 'process' },
+                { stepId: 8, stepName: 'Checkout', icon: '💳', type: 'process' },
+                { stepId: 9, stepName: 'Departure', icon: '👋', type: 'end' }
+            ]},
+            hotel: { id: 'hotel', name: 'International Hotel Chain', steps: [
+                { stepId: 1, stepName: 'Online Booking', icon: '🌐', type: 'start' },
+                { stepId: 2, stepName: 'Confirmation', icon: '📧', type: 'process' },
+                { stepId: 3, stepName: 'Arrival', icon: '🚗', type: 'process' },
+                { stepId: 4, stepName: 'Check-In', icon: '🔑', type: 'decision' },
+                { stepId: 5, stepName: 'Room Key', icon: '🗝️', type: 'process' },
+                { stepId: 6, stepName: 'Stay & Service', icon: '🛏️', type: 'process' },
+                { stepId: 7, stepName: 'Check-Out', icon: '💰', type: 'process' },
+                { stepId: 8, stepName: 'Follow-up', icon: '📞', type: 'end' }
+            ]},
+            'theme-park': { id: 'theme-park', name: 'Recreational Theme Park', steps: [
+                { stepId: 1, stepName: 'Ticketing', icon: '🎫', type: 'start' },
+                { stepId: 2, stepName: 'Parking', icon: '🅿️', type: 'process' },
+                { stepId: 3, stepName: 'Entry Gate', icon: '🎟️', type: 'decision' },
+                { stepId: 4, stepName: 'Navigation', icon: '🗺️', type: 'process' },
+                { stepId: 5, stepName: 'Attractions', icon: '🎢', type: 'decision' },
+                { stepId: 6, stepName: 'Dining', icon: '🍿', type: 'process' },
+                { stepId: 7, stepName: 'Shopping', icon: '🛍️', type: 'process' },
+                { stepId: 8, stepName: 'Departure', icon: '👋', type: 'end' }
+            ]}
+        };
+
+        const app = {
+            currentPage: 'dashboard',
+            selectedTemplate: null,
+            project: null,
+            currentStep: 1,
+            reviews: {},
+            students: JSON.parse(localStorage.getItem('students')) || [],
+            currentStudent: null,
+
+            goToPage(page) {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(page + '-page').classList.add('active');
+                this.currentPage = page;
+                if (page === 'dashboard') this.renderDashboard();
+                if (page === 'industry') this.renderIndustry();
+                if (page === 'overview') this.renderOverview();
+                if (page === 'analytics') this.renderAnalytics();
+            },
+
+            openAddStudentModal() { document.getElementById('add-student-modal').classList.add('active'); },
+            closeAddStudentModal() {
+                document.getElementById('add-student-modal').classList.remove('active');
+                document.getElementById('modal-student-name').value = '';
+                document.getElementById('modal-student-email').value = '';
+                document.getElementById('modal-student-class').value = '';
+            },
+
+            addStudent() {
+                const name = document.getElementById('modal-student-name').value.trim();
+                if (!name) { alert('Please enter student name'); return; }
+                
+                this.students.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    name,
+                    email: document.getElementById('modal-student-email').value.trim(),
+                    class: document.getElementById('modal-student-class').value.trim(),
+                    projects: []
+                });
+                
+                localStorage.setItem('students', JSON.stringify(this.students));
+                this.closeAddStudentModal();
+                this.renderDashboard();
+            },
+
+            deleteStudent(studentId) {
+                if (confirm('Delete this student?')) {
+                    this.students = this.students.filter(s => s.id !== studentId);
+                    localStorage.setItem('students', JSON.stringify(this.students));
+                    this.renderDashboard();
+                }
+            },
+
+            startProjectForStudent(studentId) {
+                this.currentStudent = this.students.find(s => s.id === studentId);
+                this.goToPage('industry');
+            },
+
+            renderDashboard() {
+                const container = document.getElementById('students-container');
+                if (this.students.length === 0) {
+                    container.innerHTML = '<div class="card" style="text-align: center; color: #999;">No students yet. Click "Add New Student" to get started.</div>';
+                    return;
+                }
+                container.innerHTML = `<div class="student-list">${this.students.map(student => `
+                    <div class="student-card">
+                        <div class="student-card-name">${student.name}</div>
+                        <div class="student-card-company">${student.class || 'No class'}</div>
+                        ${student.email ? `<div style="font-size: 12px; color: #999;">${student.email}</div>` : ''}
+                        <div class="student-actions">
+                            <button class="btn btn-primary btn-small" onclick="app.startProjectForStudent('${student.id}')">➕ New</button>
+                            <button class="btn btn-danger btn-small" onclick="app.deleteStudent('${student.id}')">🗑</button>
+                        </div>
+                    </div>
+                `).join('')}</div>`;
+            },
+
+            renderIndustry() {
+                const grid = document.getElementById('industry-grid');
+                grid.innerHTML = Object.values(templates).map(template => `
+                    <div class="card" onclick="app.selectTemplate('${template.id}')" style="cursor: pointer;">
+                        <h2 style="font-size: 20px; margin-bottom: 12px; color: #003E73;">${template.name}</h2>
+                        <p style="color: #666; margin-bottom: 16px; font-size: 14px;">${template.steps.length} process steps</p>
+                        <button class="btn btn-primary" style="width: 100%;">Select →</button>
+                    </div>
+                `).join('');
+            },
+
+            selectTemplate(templateId) {
+                this.selectedTemplate = templates[templateId];
+                document.getElementById('setup-student-name').textContent = this.currentStudent.name;
+                this.goToPage('setup');
+            },
+
+            startProject() {
+                const companyName = document.getElementById('company-name').value.trim();
+                if (!companyName) { alert('Please enter company name'); return; }
+
+                this.project = {
+                    projectId: Math.random().toString(36).substr(2, 9),
+                    studentId: this.currentStudent.id,
+                    studentName: this.currentStudent.name,
+                    company: companyName,
+                    template: this.selectedTemplate,
+                    createdAt: new Date().toLocaleString()
+                };
+
+                this.reviews = {};
+                this.selectedTemplate.steps.forEach(step => { this.reviews[step.stepId] = []; });
+                this.currentStep = 1;
+                this.renderReviewInput();
+                this.goToPage('review');
+            },
+
+            renderReviewInput() {
+                const step = this.selectedTemplate.steps[this.currentStep - 1];
+                const totalSteps = this.selectedTemplate.steps.length;
+                const progress = (this.currentStep / totalSteps) * 100;
+
+                document.getElementById('progress-fill').style.width = progress + '%';
+                document.getElementById('step-info').textContent = `Step ${this.currentStep} of ${totalSteps}`;
+                document.getElementById('step-icon').textContent = step.icon;
+                document.getElementById('step-name').textContent = step.stepName;
+                document.getElementById('review-student-name').textContent = this.currentStudent.name;
+                document.getElementById('review-count').textContent = (this.reviews[step.stepId].length + 1);
+                document.getElementById('char-count').textContent = '0';
+                document.getElementById('review-input').value = '';
+                document.getElementById('prev-btn').disabled = this.currentStep === 1;
+                document.getElementById('next-btn').textContent = this.currentStep === totalSteps ? 'View Results →' : 'Next Step →';
+                this.renderReviews();
+            },
+
+            renderReviews() {
+                const step = this.selectedTemplate.steps[this.currentStep - 1];
+                const reviewsList = document.getElementById('reviews-list');
+                const reviews = this.reviews[step.stepId];
+                if (reviews.length === 0) { reviewsList.innerHTML = ''; return; }
+                reviewsList.innerHTML = `<h3 style="margin-bottom: 12px;">Added Reviews (${reviews.length}/5)</h3>` +
+                    reviews.map((review, idx) => `
+                        <div class="review-item">
+                            <strong>Review ${idx + 1}</strong>
+                            <div style="margin-top: 8px;">"${review.text}"</div>
+                            <button class="btn btn-danger btn-small" onclick="app.removeReview(${idx})" style="margin-top: 8px;">🗑 Remove</button>
+                        </div>
+                    `).join('');
+            },
+
+            addReview() {
+                const text = document.getElementById('review-input').value.trim();
+                if (text.length < 20) { alert('Review must be at least 20 characters'); return; }
+                const step = this.selectedTemplate.steps[this.currentStep - 1];
+                if (this.reviews[step.stepId].length >= 5) { alert('Maximum 5 reviews per step'); return; }
+                this.reviews[step.stepId].push({ id: Math.random().toString(36).substr(2, 9), text, date: new Date().toLocaleDateString() });
+                this.renderReviewInput();
+            },
+
+            removeReview(idx) {
+                const step = this.selectedTemplate.steps[this.currentStep - 1];
+                this.reviews[step.stepId].splice(idx, 1);
+                this.renderReviewInput();
+            },
+
+            nextStep() {
+                const step = this.selectedTemplate.steps[this.currentStep - 1];
+                if (this.reviews[step.stepId].length < 3) { alert('Add at least 3 reviews'); return; }
+                if (this.currentStep === this.selectedTemplate.steps.length) {
+                    this.goToPage('overview');
+                } else {
+                    this.currentStep++;
+                    this.renderReviewInput();
+                }
+            },
+
+            previousStep() {
+                if (this.currentStep > 1) { this.currentStep--; this.renderReviewInput(); }
+            },
+
+            getRiskLevel(count) {
+                if (count <= 2) return 'low';
+                if (count <= 4) return 'medium';
+                return 'high';
+            },
+
+            getRiskColor(level) {
+                return level === 'low' ? '#2ECC71' : level === 'medium' ? '#F39C12' : '#E74C3C';
+            },
+
+            getOverallRiskLevel() {
+                const allCounts = this.selectedTemplate.steps.map(s => this.reviews[s.stepId].length);
+                const highRiskCount = allCounts.filter(c => c > 4).length;
+                const mediumRiskCount = allCounts.filter(c => c > 2 && c <= 4).length;
+                if (highRiskCount > 3) return { level: 'CRITICAL', color: '#E74C3C' };
+                if (highRiskCount > 0 || mediumRiskCount > 4) return { level: 'HIGH', color: '#F39C12' };
+                if (mediumRiskCount > 0) return { level: 'MEDIUM', color: '#F39C12' };
+                return { level: 'LOW', color: '#2ECC71' };
+            },
+
+            renderOverview() {
+                const totalReviews = Object.values(this.reviews).reduce((sum, arr) => sum + arr.length, 0);
+                document.getElementById('overview-subtitle').textContent = `${this.currentStudent.name} • ${this.project.company}`;
+
+                const highRisk = this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'high').length;
+                const mediumRisk = this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'medium').length;
+                const lowRisk = this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'low').length;
+
+                document.getElementById('summary-stats').innerHTML = `
+                    <div class="stat-card"><div class="stat-value">${totalReviews}</div><div class="stat-label">Total Reviews</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color: #E74C3C;">${highRisk}</div><div class="stat-label">High Risk</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color: #F39C12;">${mediumRisk}</div><div class="stat-label">Medium Risk</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color: #2ECC71;">${lowRisk}</div><div class="stat-label">Low Risk</div></div>
+                `;
+
+                const flow = document.getElementById('process-flow');
+                flow.innerHTML = this.selectedTemplate.steps.map((step, idx) => {
+                    const count = this.reviews[step.stepId].length;
+                    const level = this.getRiskLevel(count);
+                    return `${idx > 0 ? '<div class="process-flow-arrow">→</div>' : ''}
+                        <div class="process-node ${step.type}">
+                            <div class="process-node-icon">${step.icon}</div>
+                            <div class="process-node-name">${step.stepName}</div>
+                            <div class="process-node-count" style="background: ${this.getRiskColor(level)};">${count}</div>
+                        </div>`;
+                }).join('');
+
+                const details = document.getElementById('step-details');
+                details.innerHTML = this.selectedTemplate.steps.map(step => {
+                    const reviews = this.reviews[step.stepId];
+                    const level = this.getRiskLevel(reviews.length);
+                    return `<div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div><h3 style="color: #003E73; margin-bottom: 8px;">${step.icon} ${step.stepName}</h3><p style="font-size: 13px; color: #666;">Reviews: ${reviews.length}</p></div>
+                            <span class="risk-badge risk-${level}">${level.toUpperCase()}</span>
+                        </div>
+                        ${reviews.length > 0 ? `<div style="margin-top: 12px; border-top: 1px solid #e0e0e0; padding-top: 12px;">
+                            ${reviews.slice(0, 2).map(r => `<p style="font-size: 12px; color: #666; margin-bottom: 8px;">"${r.text.substring(0, 100)}..."</p>`).join('')}
+                            ${reviews.length > 2 ? `<p style="font-size: 12px; color: #999;">+${reviews.length - 2} more</p>` : ''}
+                        </div>` : ''}
+                    </div>`;
+                }).join('');
+            },
+
+            renderAnalytics() {
+                const sorted = this.selectedTemplate.steps.map(step => ({ ...step, count: this.reviews[step.stepId].length })).sort((a, b) => b.count - a.count);
+                const totalReviews = Object.values(this.reviews).reduce((sum, arr) => sum + arr.length, 0);
+                const overallRisk = this.getOverallRiskLevel();
+                const highRisk = sorted.filter(s => this.getRiskLevel(s.count) === 'high').length;
+
+                document.getElementById('analytics-stats').innerHTML = `
+                    <div class="stat-card"><div class="stat-value">${totalReviews}</div><div class="stat-label">Total Reviews</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color: #E74C3C;">${highRisk}</div><div class="stat-label">High Risk Steps</div></div>
+                `;
+
+                document.getElementById('overall-risk').innerHTML = `
+                    <div class="card" style="text-align: center; padding: 30px;">
+                        <div style="font-size: 48px; font-weight: bold; color: ${overallRisk.color}; margin-bottom: 16px;">${overallRisk.level}</div>
+                        <p style="font-size: 16px; color: #666;"><strong>${this.currentStudent.name}</strong> - Overall <strong>${overallRisk.level} RISK LEVEL</strong></p>
+                    </div>
+                `;
+
+                const list = document.getElementById('analytics-list');
+                list.innerHTML = sorted.filter(s => s.count > 0).map((step, idx) => `
+                    <div style="margin-bottom: 16px; padding: 16px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid ${this.getRiskColor(this.getRiskLevel(step.count))};">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong>${step.icon} ${step.stepName}</strong>
+                            <span style="background: ${this.getRiskColor(this.getRiskLevel(step.count))}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${step.count} issue${step.count !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div style="margin-top: 12px; font-size: 12px;">
+                            <strong>Risk Level: ${this.getRiskLevel(step.count).toUpperCase()}</strong>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            exportPDF() {
+                const content = this.generateReportHTML();
+                const element = document.createElement('div');
+                element.innerHTML = content;
+                
+                html2pdf().set({
+                    margin: 10,
+                    filename: `${this.currentStudent.name}_${this.project.company}_Report.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+                }).from(element).save();
+            },
+
+            exportWord() {
+                const content = this.generateReportHTML();
+                const blob = new Blob(['<html><head><meta charset="utf-8"></head><body>' + content + '</body></html>'], { type: 'application/msword' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${this.currentStudent.name}_${this.project.company}_Report.doc`;
+                link.click();
+            },
+
+            generateReportHTML() {
+                const overallRisk = this.getOverallRiskLevel();
+                const totalReviews = Object.values(this.reviews).reduce((sum, arr) => sum + arr.length, 0);
+
+                let html = `<style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 20px; }
+                    h1 { color: #003E73; border-bottom: 3px solid #003E73; padding-bottom: 10px; }
+                    h2 { color: #003E73; margin-top: 30px; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    th, td { padding: 12px; text-align: left; border: 1px solid #ddd; }
+                    th { background: #003E73; color: white; }
+                    .risk-section { margin: 20px 0; padding: 15px; border-left: 4px solid #E74C3C; background: #f9f9f9; }
+                    .risk-badge { padding: 8px 16px; border-radius: 20px; display: inline-block; color: white; font-weight: bold; }
+                </style>`;
+
+                html += `<h1>🏨 Hospitality Process Mapping Report</h1>
+                    <h2>Student Information</h2>
+                    <table>
+                        <tr><td><strong>Student Name</strong></td><td>${this.currentStudent.name}</td></tr>
+                        <tr><td><strong>Email</strong></td><td>${this.currentStudent.email || 'N/A'}</td></tr>
+                        <tr><td><strong>Class</strong></td><td>${this.currentStudent.class || 'N/A'}</td></tr>
+                    </table>
+
+                    <h2>Project Information</h2>
+                    <table>
+                        <tr><td><strong>Company</strong></td><td>${this.project.company}</td></tr>
+                        <tr><td><strong>Industry</strong></td><td>${this.selectedTemplate.name}</td></tr>
+                        <tr><td><strong>Date</strong></td><td>${new Date().toLocaleString()}</td></tr>
+                    </table>
+
+                    <h2>Risk Assessment Summary</h2>
+                    <div style="padding: 20px; background: ${overallRisk.color}; color: white; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 36px; font-weight: bold; margin-bottom: 10px;">${overallRisk.level}</div>
+                        <p><strong>${this.currentStudent.name}</strong> - Overall <strong>${overallRisk.level}</strong> RISK LEVEL</p>
+                    </div>
+
+                    <h2>Summary Statistics</h2>
+                    <table>
+                        <tr><th>Metric</th><th>Value</th></tr>
+                        <tr><td>Total Reviews Collected</td><td>${totalReviews}</td></tr>
+                        <tr><td>High Risk Steps</td><td>${this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'high').length}</td></tr>
+                        <tr><td>Medium Risk Steps</td><td>${this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'medium').length}</td></tr>
+                        <tr><td>Low Risk Steps</td><td>${this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'low').length}</td></tr>
+                    </table>
+
+                    <h2>Detailed Step Analysis</h2>`;
+
+                this.selectedTemplate.steps.forEach(step => {
+                    const reviews = this.reviews[step.stepId];
+                    const level = this.getRiskLevel(reviews.length);
+                    html += `<div class="risk-section">
+                        <h3>${step.icon} ${step.stepName}</h3>
+                        <p><strong>Risk Level:</strong> <span class="risk-badge" style="background: ${this.getRiskColor(level)};">${level.toUpperCase()}</span></p>
+                        <p><strong>Reviews:</strong> ${reviews.length}</p>`;
+                    if (reviews.length > 0) {
+                        html += `<p><strong>Customer Feedback:</strong></p><ul>`;
+                        reviews.forEach((r) => html += `<li>"${r.text}"</li>`);
+                        html += `</ul>`;
+                    }
+                    html += `</div>`;
+                });
+
+                html += `<h2>Recommendations</h2>
+                    <ol>
+                        <li>Focus improvements on high-risk steps (5+ negative reviews)</li>
+                        <li>Implement process changes based on identified pain points</li>
+                        <li>Train staff on commonly mentioned issues</li>
+                        <li>Monitor improvements with follow-up customer feedback</li>
+                        <li>Document all process modifications</li>
+                    </ol>`;
+
+                return html;
+            }
+        };
+
+        app.renderDashboard();
+        document.getElementById('review-input').addEventListener('input', (e) => {
+            document.getElementById('char-count').textContent = e.target.value.length;
+        });
+    </script>
+</body>
+</html>
