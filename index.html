@@ -484,104 +484,82 @@
                 if (mediumRiskCount > 0) return { level: 'MEDIUM', color: '#F39C12' };
                 return { level: 'LOW', color: '#2ECC71' };
             },
+renderOverview() {
+    const totalReviews = Object.values(this.reviews).reduce((sum, arr) => sum + arr.length, 0);
+    document.getElementById('overview-subtitle').textContent = `${this.currentStudent.name} • ${this.project.company}`;
 
-            renderOverview() {
-                const totalReviews = Object.values(this.reviews).reduce((sum, arr) => sum + arr.length, 0);
-                document.getElementById('overview-subtitle').textContent = `${this.currentStudent.name} • ${this.project.company}`;
+    const totalSteps = this.selectedTemplate.steps.length;
+    const completedSteps = this.selectedTemplate.steps.filter(s => {
+        const count = this.reviews[s.stepId].length;
+        return count >= 3;
+    }).length;
+    
+    const isCompleted = completedSteps === totalSteps;
+    
+    // Save progress
+    const studentIndex = this.students.findIndex(s => s.id === this.currentStudent.id);
+    if (studentIndex !== -1) {
+        if (!this.students[studentIndex].projects) {
+            this.students[studentIndex].projects = [];
+        }
+        
+        let projectIndex = this.students[studentIndex].projects.findIndex(p => 
+            p.projectId === this.project.projectId
+        );
+        
+        if (projectIndex === -1) {
+            this.students[studentIndex].projects.push({
+                projectId: this.project.projectId,
+                company: this.project.company,
+                templateName: this.selectedTemplate.name,
+                completedSteps: completedSteps,
+                totalSteps: totalSteps,
+                completed: isCompleted,
+                createdAt: new Date().toLocaleString()
+            });
+        } else {
+            this.students[studentIndex].projects[projectIndex].completedSteps = completedSteps;
+            this.students[studentIndex].projects[projectIndex].completed = isCompleted;
+        }
+        
+        localStorage.setItem('students', JSON.stringify(this.students));
+    }
 
-                const highRisk = this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'high').length;
-                const mediumRisk = this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'medium').length;
-                const lowRisk = this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'low').length;
+    const highRisk = this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'high').length;
+    const mediumRisk = this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'medium').length;
+    const lowRisk = this.selectedTemplate.steps.filter(s => this.getRiskLevel(this.reviews[s.stepId].length) === 'low').length;
 
-                document.getElementById('summary-stats').innerHTML = `
-                    <div class="stat-card"><div class="stat-value">${totalReviews}</div><div class="stat-label">Total Reviews</div></div>
-                    <div class="stat-card"><div class="stat-value" style="color: #E74C3C;">${highRisk}</div><div class="stat-label">High Risk</div></div>
-                    <div class="stat-card"><div class="stat-value" style="color: #F39C12;">${mediumRisk}</div><div class="stat-label">Medium Risk</div></div>
-                    <div class="stat-card"><div class="stat-value" style="color: #2ECC71;">${lowRisk}</div><div class="stat-label">Low Risk</div></div>
-                `;
-const totalSteps = this.selectedTemplate.steps.length;
-                const completedSteps = this.selectedTemplate.steps.filter(s => {
-                    const count = this.reviews[s.stepId].length;
-                    return count >= 3;
-                }).length;
-                
-                const isCompleted = completedSteps === totalSteps;
-                
-                // Find student in list
-                const studentIndex = this.students.findIndex(s => s.id === this.currentStudent.id);
-                if (studentIndex === -1) return; // Student not found
-                
-                // Initialize projects array if needed
-                if (!this.students[studentIndex].projects) {
-                    this.students[studentIndex].projects = [];
-                }
-                
-                // Find or create project entry
-                let projectIndex = this.students[studentIndex].projects.findIndex(p => 
-                    p.projectId === this.project.projectId
-                );
-                
-                if (projectIndex === -1) {
-                    // Create new project entry
-                    this.students[studentIndex].projects.push({
-                        projectId: this.project.projectId,
-                        company: this.project.company,
-                        templateName: this.selectedTemplate.name,
-                        completedSteps: completedSteps,
-                        totalSteps: totalSteps,
-                        completed: isCompleted,
-                        createdAt: new Date().toLocaleString(),
-                        stepDetails: this.selectedTemplate.steps.map(step => ({
-                            stepId: step.stepId,
-                            stepName: step.stepName,
-                            icon: step.icon,
-                            reviews: this.reviews[step.stepId].length
-                        }))
-                    });
-                } else {
-                    // Update existing project entry
-                    this.students[studentIndex].projects[projectIndex].completedSteps = completedSteps;
-                    this.students[studentIndex].projects[projectIndex].completed = isCompleted;
-                    this.students[studentIndex].projects[projectIndex].stepDetails = this.selectedTemplate.steps.map(step => ({
-                        stepId: step.stepId,
-                        stepName: step.stepName,
-                        icon: step.icon,
-                        reviews: this.reviews[step.stepId].length
-                    }));
-                }
-                
-                // Save to browser storage
-                localStorage.setItem('students', JSON.stringify(this.students));
-                console.log('✅ Project progress saved!');
-            },
-                const flow = document.getElementById('process-flow');
-                flow.innerHTML = this.selectedTemplate.steps.map((step, idx) => {
-                    const count = this.reviews[step.stepId].length;
-                    const level = this.getRiskLevel(count);
-                    return `${idx > 0 ? '<div class="process-flow-arrow">→</div>' : ''}
-                        <div class="process-node ${step.type}">
-                            <div class="process-node-icon">${step.icon}</div>
-                            <div class="process-node-name">${step.stepName}</div>
-                            <div class="process-node-count" style="background: ${this.getRiskColor(level)};">${count}</div>
-                        </div>`;
-                }).join('');
+    document.getElementById('summary-stats').innerHTML = `
+        <div class="stat-card"><div class="stat-value">${totalReviews}</div><div class="stat-label">Total Reviews</div></div>
+        <div class="stat-card"><div class="stat-value" style="color: #E74C3C;">${highRisk}</div><div class="stat-label">High Risk</div></div>
+        <div class="stat-card"><div class="stat-value" style="color: #F39C12;">${mediumRisk}</div><div class="stat-label">Medium Risk</div></div>
+        <div class="stat-card"><div class="stat-value" style="color: #2ECC71;">${lowRisk}</div><div class="stat-label">Low Risk</div></div>
+    `;
 
-                const details = document.getElementById('step-details');
-                details.innerHTML = this.selectedTemplate.steps.map(step => {
-                    const reviews = this.reviews[step.stepId];
-                    const level = this.getRiskLevel(reviews.length);
-                    return `<div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <div><h3 style="color: #003E73; margin-bottom: 8px;">${step.icon} ${step.stepName}</h3><p style="font-size: 13px; color: #666;">Reviews: ${reviews.length}</p></div>
-                            <span class="risk-badge risk-${level}">${level.toUpperCase()}</span>
-                        </div>
-                        ${reviews.length > 0 ? `<div style="margin-top: 12px; border-top: 1px solid #e0e0e0; padding-top: 12px;">
-                            ${reviews.slice(0, 2).map(r => `<p style="font-size: 12px; color: #666; margin-bottom: 8px;">"${r.text.substring(0, 100)}..."</p>`).join('')}
-                            ${reviews.length > 2 ? `<p style="font-size: 12px; color: #999;">+${reviews.length - 2} more</p>` : ''}
-                        </div>` : ''}
-                    </div>`;
-                }).join('');
-            },
+    const flow = document.getElementById('process-flow');
+    flow.innerHTML = this.selectedTemplate.steps.map((step, idx) => {
+        const count = this.reviews[step.stepId].length;
+        const level = this.getRiskLevel(count);
+        return `${idx > 0 ? '<div class="process-flow-arrow">→</div>' : ''}
+            <div class="process-node ${step.type}">
+                <div class="process-node-icon">${step.icon}</div>
+                <div class="process-node-name">${step.stepName}</div>
+                <div class="process-node-count" style="background: ${this.getRiskColor(level)};">${count}</div>
+            </div>`;
+    }).join('');
+
+    const details = document.getElementById('step-details');
+    details.innerHTML = this.selectedTemplate.steps.map(step => {
+        const reviews = this.reviews[step.stepId];
+        const level = this.getRiskLevel(reviews.length);
+        return `<div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div><h3 style="color: #003E73; margin-bottom: 8px;">${step.icon} ${step.stepName}</h3><p style="font-size: 13px; color: #666;">Reviews: ${reviews.length}</p></div>
+                <span class="risk-badge risk-${level}">${level.toUpperCase()}</span>
+            </div>
+        </div>`;
+    }).join('');
+},
 
             renderAnalytics() {
                 const sorted = this.selectedTemplate.steps.map(step => ({ ...step, count: this.reviews[step.stepId].length })).sort((a, b) => b.count - a.count);
